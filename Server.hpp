@@ -39,7 +39,9 @@ private:
 	std::map<uintptr_t, HTTP>		clients;
 	struct timespec					kq_timeout;
 	std::vector<struct kevent>		change_list;
-
+    //todo 요기
+    /* cgi test */
+    int fdA[2],fdB[2];
 public:
 	Server(Config const & c);
 	/* Server_socket */
@@ -75,7 +77,11 @@ public:
 	void sendResMessage();
 	void setResDefaultHeaderField();
 	void changeStatusToError(int st);
-	void isFile(); 
+	void isFile();
+    //todo 요기
+    /* cgi_test */
+    void initCGI();
+    void child();
 };
 
 

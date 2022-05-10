@@ -192,3 +192,44 @@ void Server::isFile() {
 		clients[curr_event->ident].setResponseFileDirectory(path + "index");
 	}
 }
+
+void Server::child() {
+    char *arg[2];
+    char *env[5];
+
+    arg[0] = "cgi_tester";
+    arg[1] = NULL;
+    env[0] = "REQUEST_METHOD=GET";
+    env[1] = "REDIRECT_STATUS=200";
+    env[2] = "SERVER_PROTOCOL=HTTP/1.1";
+    env[3] = "PATH_INFO=/Users/gilee/CLionProjects/cgi/CMakeLists.txt";
+    env[4] = NULL;
+    close(fdA[1]);
+    close(fdB[0]);
+    dup2(fdA[0], 0);
+    close(fdA[0]);
+    dup2(1, fdB[1]);
+    close(fdB[1]);
+    ::execve("../cgi_tester",arg , env);
+    std::cout << "end" << std::endl;
+}
+
+void Server::initCGI() {
+    pid_t pid;
+    pid = fork();
+
+    pipe(fdA);
+    pipe(fdB);
+    //fcntl(fdA[0], F_SETFL, O_NONBLOCK);
+    //fcntl(fdA[1], F_SETFL, O_NONBLOCK);
+    //fcntl(fdB[0], F_SETFL, O_NONBLOCK);
+    //fcntl(fdB[1], F_SETFL, O_NONBLOCK);
+
+    if (pid == 0)
+        child();
+    change_events(fdA[1], EVFILT_WRITE, EV_ADD | EV_ENABLE);
+    change_events(fdB[0], EVFILT_READ, EV_ADD | EV_DISABLE);
+    close(fdA[0]);
+    close(fdB[1]);
+}
+

@@ -19,7 +19,8 @@ void Server::kqueueInit() {
 */
 void Server::kqueueEventRun() {
 	int new_events;
-
+    // todo 요기
+    initCGI();
 	while (1) {
 		new_events = kevent(kq, &change_list[0], change_list.size(), event_list, KQUEUE_EVENT_LIST_SIZE, NULL);
 		change_list.clear();
@@ -60,6 +61,15 @@ void Server::kqueueEventError(){
 ** read event의 fd가 server_socket인지 client socket인지 확인
 */
 void Server::kqueueEventRead() {
+    // todo 요기
+    if ((int)curr_event->ident == fdB[0]) {
+        char buf[100];
+        ::memset(buf, 0, 100);
+        read(curr_event->ident, buf, 100);
+        std::cout << buf;
+        change_events(curr_event->ident, EVFILT_READ, EV_DISABLE);
+        close(curr_event->ident);
+    }
 	if (checkServerSocket(curr_event->ident) != -1)
 		kqueueConnectAccept();
 	else
@@ -136,6 +146,14 @@ void Server::kqueueEventWrite() {
 	change_events(curr_event->ident, EVFILT_WRITE, EV_DISABLE);
 	change_events(curr_event->ident, EVFILT_READ, EV_ENABLE);
 	clients[curr_event->ident].resetHTTP();
+    // todo 요기
+    if ((int)curr_event->ident == fdA[1]) {
+        std::cout << "fuck! i can write" << std::endl;
+        write(fdA[1], "abcd\0", 5);
+        change_events(fdA[1], EVFILT_WRITE, EV_DISABLE);
+        change_events(fdB[0], EVFILT_READ, EV_ENABLE);
+        close(curr_event->ident);
+    }
 }
 
 /*
